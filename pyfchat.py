@@ -1,11 +1,19 @@
-"""pyfchat simple chat with file transfer ability."""
 import sys
+
+# Colors in the terminal ! :D
+try:
+    import colorama
+except ImportError:
+    print("""Please, install colorama!
+
+pip install colorama
+    """)
+
 from server import Server
 from client import Client
 
 
 def print_help():
-    """print help."""
     print("""Welcome to pyfchat
 
 CLIENT MODE:
@@ -21,8 +29,20 @@ SERVER MODE:
     """)
 
 if __name__ == '__main__':
+    # Initialise colorama
+    colorama.init()
+
     if len(sys.argv) < 2:
-        Client().run()
+        username = input('Enter your username: ')
+        server = input('Enter server: ')
+        port = 5000
+
+        client = Client(username)
+        client.set_server(server)
+        client.set_port(port)
+
+        client.run()
+
     else:
         if sys.argv[1] == 'server':
             Server().run()
