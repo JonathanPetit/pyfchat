@@ -1,5 +1,4 @@
 import socket
-import pickle
 from colorama import Fore
 
 
@@ -23,7 +22,7 @@ class Client:
         try:
             self.server_port = int(port)
         except ValueError:
-            print(Fore.RED + "Not a valid port number, 5000 will be used instead" + Fore.RESET)
+            print(Fore.RED + "Not a valid port number, 5000 will be used instead")
             self.server_port = 6000
 
     def send_available_to_server(self):
@@ -36,19 +35,7 @@ class Client:
             print(response)
             self.socket.close()
         except OSError:
-            print(Fore.RED + "Impossible to connect: Server not found" + Fore.RESET)
-
-    def _send(self, message):
-        try:
-            totalsent = 0
-            msg = pickle.dumps(message)
-
-            while totalsent < len(msg):
-                sent = self.socket.send(msg[totalsent:])
-                totalsent += sent
-
-        except OSError:
-            print(Fore.RED + "Server error" + Fore.RESET)
+            print(Fore.RED + "Impossible to connect: Server not found")
 
     def _recv(self):
         response = b""

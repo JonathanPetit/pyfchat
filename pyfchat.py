@@ -33,11 +33,11 @@ SERVER MODE:
 
 if __name__ == '__main__':
     # Initialise colorama
-    colorama.init()
+    colorama.init(autoreset=True)
 
     if len(sys.argv) < 2:
         username = input("Enter your username: ")
-        server = input("Enter server " + Style.DIM + "(default: localhost): " + Style.RESET)
+        server = input("Enter server " + Style.DIM + "(default: localhost): ")
         port = 6000
 
         client = Client(username)
