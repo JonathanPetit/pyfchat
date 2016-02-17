@@ -8,6 +8,7 @@ except ImportError:
 
 pip install colorama
     """)
+    sys.exit(1)
 
 from server import Server
 from client import Client
