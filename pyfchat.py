@@ -1,3 +1,4 @@
+# -*-coding:Latin-1 -*
 import sys
 
 # Colors in the terminal ! :D
@@ -35,7 +36,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         username = input('Enter your username: ')
         server = input('Enter server: ')
-        port = 5000
+        port = 6000
 
         client = Client(username)
         client.set_server(server)
