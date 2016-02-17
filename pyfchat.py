@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) < 2:
         username = input("Enter your username: ")
-        server = input("Enter server " + Style.DIM + "(default: localhost): ")
+        server = input("Enter server " + Style.DIM + "(default: localhost): " + Style.RESET)
         port = 6000
 
         client = Client(username)

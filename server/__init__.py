@@ -16,7 +16,7 @@ class Server:
             self.socket.bind(addressserveur)
         except socket.error as e:
             if e.errno == 98:
-                print("Port is already in use")
+                print(Fore.YELLOW + "Port is already in use" + Fore.RESET)
                 sys.exit(1)
 
         self.address = socket.gethostname()
@@ -34,7 +34,7 @@ class Server:
                 client.shutdown(1)
                 client.close()
             except OSError:
-                print(Fore.RED + 'Erreur traitement requête client')
+                print(Fore.RED + 'Erreur traitement requête client' + Fore.RESET)
 
     def _handle(self, client, ip):
         request = self._recv(client)
@@ -43,11 +43,11 @@ class Server:
         if command == "AVAILABLE":
             self._handle_command_available(ip, args)
         else:
-            print(Fore.YELLOW + "Invalid request")
+            print(Fore.YELLOW + "Invalid request" + Fore.RESET)
 
     def _handle_command_available(self, ip, args):
         if not len(args) == 1:
-            print(Fore.YELLOW + "Invalid request")
+            print(Fore.YELLOW + "Invalid request" + Fore.RESET)
             return
 
         username = args[0]
@@ -55,10 +55,10 @@ class Server:
         # If the username is in the list check if the ip adress is the same
         if username in self.users:
             if not ip == self.users.get(username):
-                print(Fore.RED + "Username is already in use")
+                print(Fore.RED + "Username is already in use" + Fore.RESET)
         else:
             self.users[username] = ip
-            print(Fore.GREEN + "User added:", username, ip)
+            print(Fore.GREEN + "User added:", username, ip, Fore.RESET)
 
     def _recv(self, client):
         response = b""
@@ -74,7 +74,7 @@ def parse_request(request):
     r = request.strip().split()
 
     if len(r) < 2:
-        print(Fore.YELLOW + "Invalid request")
+        print(Fore.YELLOW + "Invalid request" + Fore.RESET)
         return
 
     command = r[0]

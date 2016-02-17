@@ -23,7 +23,7 @@ class Client:
         try:
             self.server_port = int(port)
         except ValueError:
-            print(Fore.RED + "Not a valid port number, 5000 will be used instead")
+            print(Fore.RED + "Not a valid port number, 5000 will be used instead" + Fore.RESET)
             self.server_port = 6000
 
     def send_available_to_server(self):
@@ -36,7 +36,7 @@ class Client:
             print(response)
             self.socket.close()
         except OSError:
-            print(Fore.RED + "Impossible to connect: Server not found")
+            print(Fore.RED + "Impossible to connect: Server not found" + Fore.RESET)
 
     def _send(self, message):
         try:
@@ -48,7 +48,7 @@ class Client:
                 totalsent += sent
 
         except OSError:
-            print(Fore.RED + "Server error")
+            print(Fore.RED + "Server error" + Fore.RESET)
 
     def _recv(self):
         response = b""
