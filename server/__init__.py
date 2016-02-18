@@ -3,6 +3,8 @@ import sys
 
 from colorama import Fore
 
+import util
+
 addressserveur = (socket.gethostname(), 6000)
 
 
@@ -22,6 +24,8 @@ class Server:
         self.address = socket.gethostname()
         self.users = {}
 
+    #
+    #
     def run(self):
         print("Listening on " + addressserveur[0] + ":%i" % addressserveur[1])
 
@@ -30,29 +34,39 @@ class Server:
         while True:
             client, ipaddress = self.socket.accept()
             try:
-                self._handle(client, ipaddress)
+                self._handle(client, ipaddress[0])
                 client.shutdown(1)
                 client.close()
             except OSError:
                 print(Fore.RED + 'Erreur traitement requête client')
 
+    #
+    #
     def _handle(self, client, ip):
         request = self._recv(client)
-        command, args = parse_request(request)
+        command, args = util.parse_command(request)
 
-        if command == "AVAILABLE":
-            self._handle_command_available(client, ip, args)
+        commands = {
+            "AVAILABLE": self._handle_command_available,
+            "CONNECT": self._command_unimplemented,
+        }
+
+        if command in commands:
+            commands[command](client, ip, args)
         else:
-            print(Fore.YELLOW + "Invalid request")
-            self._hande_invalid_request(client)
+            self._invalid_request(client)
 
-    def _hande_invalid_request(self, client):
+    #
+    #
+    def _invalid_request(self, client):
         print(Fore.YELLOW + "Invalid request")
-        client.sendall("ERROR 'Invalid request'".encode())
+        client.sendall("ERROR E01 'Invalid request'".encode())
 
+    #
+    #
     def _handle_command_available(self, client, ip, args):
         if not len(args) == 1:
-            self._hande_invalid_request(client)
+            self._invalid_request(client)
             return
 
         username = args[0]
@@ -61,8 +75,9 @@ class Server:
         if username in self.users:
             if not ip == self.users.get(username):
                 print(Fore.RED + "Username is already in use")
-                client.sendall("ERROR 'Username already in use'".encode())
+                client.sendall("ERROR E02 'Username already in use'".encode())
             else:
+                print("User \"" + username + "\" pinged")
                 client.sendall("OK".encode())
 
         else:
@@ -79,15 +94,8 @@ class Server:
 
         return response.decode()
 
-
-def parse_request(request):
-    r = request.strip().split()
-
-    if len(r) < 2:
-        print(Fore.YELLOW + "Invalid request")
-        return
-
-    command = r[0]
-    args = r[1:]
-
-    return (command, args)
+    #
+    # Helper function for commands that are not yet implemented
+    #
+    def _command_unimplemented(self, client, ip, args):
+        print(Fore.YELLOW + "Ow, It seems I am not implemented yet..")

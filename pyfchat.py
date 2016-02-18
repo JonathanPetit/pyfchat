@@ -4,7 +4,6 @@ import sys
 # Colors in the terminal ! :D
 try:
     import colorama
-    from colorama import Style
 except ImportError:
     print("""Please, install colorama!
 
@@ -36,13 +35,13 @@ if __name__ == '__main__':
     colorama.init(autoreset=True)
 
     if len(sys.argv) < 2:
-        username = input("Enter your username: ")
-        server = input("Enter server " + Style.DIM + "(default: localhost): ")
+
         port = 6000
 
-        client = Client(username)
-        client.set_server(server)
-        client.set_port(port)
+        client = Client()
+        client.ask_username()
+        client.ask_server()
+        client.ask_port()
 
         client.run()
 
