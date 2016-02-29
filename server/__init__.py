@@ -104,7 +104,7 @@ class Server:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             s.connect(('8.8.8.8', 0))  # connecting to a UDP address doesn't send packets
-        except:
+        except OSError:
             print("Not connected to internet")
             return socket.gethostbyname(socket.gethostname())
         return s.getsockname()[0]
