@@ -118,6 +118,6 @@ class Server:
         listusers =[]
         for users in self.users:
             listusers.append(users)
-        sendusers = ',Ò '.join(listusers)
+        sendusers = ', '.join(listusers)
         client.sendall(pickle.dumps(sendusers))
         client.sendall(pickle.dumps("OK"))
