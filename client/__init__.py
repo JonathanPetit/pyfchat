@@ -67,8 +67,10 @@ class Client:
 
             return response
 
-        except OSError:
+        except OSError as e:
             print(Fore.RED + "Impossible to connect: Server not found")
+            print(Fore.RED + self.server + ":" + str(self.server_port))
+            print(Fore.RED + e)
 
     def _recv(self):
         response = b""
