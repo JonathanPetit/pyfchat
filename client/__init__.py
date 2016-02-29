@@ -10,11 +10,20 @@ class Client:
     def __init__(self):
         self.username = "guest" + str(random.randint(100, 99999))
         self.adress = socket.gethostname()
-        self.socket = socket.socket()
 
         # By default the server points to localhost
         self.server = socket.gethostname()
         self.server_port = 6000
+        self.server_socket = socket.socket()
+        self.server_socket.settimeout(0.5)
+
+        # UDP connection
+        self.udp_socket = socket.socket(type=socket.SOCK_DGRAM)
+        self.udp_socket.settimeout(0.5)
+
+        # use random port
+        self.udp_port = random.randint(0, 65535)
+        self.udp_socket.bind((util.show_ip(), self.udp_port))
 
     def ask_username(self):
         self.set_username(
@@ -59,11 +68,11 @@ class Client:
     def send_available_to_server(self):
         try:
             print("Connecting to: " + self.server + ":%i" % self.server_port)
-            self.socket.connect((self.server, self.server_port))
-            self.socket.sendall("AVAILABLE {0}".format(self.username).encode())
-            self.socket.shutdown(1)
+            self.server_socket.connect((self.server, self.server_port))
+            self.server_socket.sendall("AVAILABLE {0} {1}".format(self.username, self.udp_port).encode())
+            self.server_socket.shutdown(1)
             response = self._recv()
-            self.socket.close()
+            self.server_socket.close()
 
             return response
 
@@ -74,10 +83,10 @@ class Client:
 
     def _recv(self):
         response = b""
-        r = self.socket.recv(1024)
+        r = self.server_socket.recv(1024)
         while r:
             response += r
-            r = self.socket.recv(1024)
+            r = self.server_socket.recv(1024)
 
         return response.decode()
 
