@@ -13,7 +13,7 @@ class Server:
 
         # Try to bind to a specific port, handle if port is already in use
         try:
-            self.socket.bind('', 6000)
+            self.socket.bind(('', 6000))
         except socket.error as e:
             if e.errno == 98:
                 print(Fore.YELLOW + "Port is already in use")
@@ -25,7 +25,7 @@ class Server:
     #
     #
     def run(self):
-        print("Listening on " + self.show_ip() + ":%i" % 6000)
+        print("Listening on " + self._show_ip() + ":%i" % 6000)
         print(self._show_ip())
 
         self.socket.listen(0)
@@ -102,5 +102,9 @@ class Server:
     # Needs an internet connecion to work...
     def _show_ip(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 0))  # connecting to a UDP address doesn't send packets
+        try:
+            s.connect(('8.8.8.8', 0))  # connecting to a UDP address doesn't send packets
+        except:
+            print("Not connected to internet")
+            return socket.gethostbyname(socket.gethostname())
         return s.getsockname()[0]
