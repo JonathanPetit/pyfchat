@@ -66,7 +66,6 @@ class Client:
             self.socket.shutdown(1)
             response = self._recv()
             self.socket.close()
-
             return response
 
         except OSError as e:
@@ -76,7 +75,6 @@ class Client:
 
     def request_userlist(self):
         try:
-            print("Connecting to: " + self.server + ":%i" % self.server_port)
             self.socket = socket.socket()
             self.socket.connect((self.server, self.server_port))
             self.socket.sendall(pickle.dumps("USERLIST"))
@@ -84,7 +82,7 @@ class Client:
             response = self._recv()
             self.socket.close()
 
-            return response
+            return print("Userlist connect: " + response)
 
         except OSError as e:
             print(Fore.RED + "Impossible to connect: Server not found")
@@ -117,3 +115,14 @@ class Client:
                 print(Fore.YELLOW + "This username (%s) is already taken, please choose another")
                 self.ask_username()
         print(self.request_userlist())
+
+
+
+
+
+# Travailler dans une branche a acomplir
+# git checkout -b <nom>
+# UDP
+# ask_user
+# fonction handle
+# socket UDP

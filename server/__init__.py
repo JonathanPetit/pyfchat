@@ -86,6 +86,7 @@ class Server:
         else:
             self.users[username] = ip
             print(Fore.GREEN + "User added:", username, ip, Fore.RESET)
+
             client.sendall(pickle.dumps("OK"))
 
     def _recv(self, client):
@@ -114,6 +115,9 @@ class Server:
         return s.getsockname()[0]
 
     def _userlist(self, client, ip, args):
-        users = [x for x in self.users]
+        listusers =[]
+        for users in self.users:
+            listusers.append(users)
+        sendusers = ',Ò '.join(listusers)
+        client.sendall(pickle.dumps(sendusers))
         client.sendall(pickle.dumps("OK"))
-        client.sendall(pickle.dumps(users))
