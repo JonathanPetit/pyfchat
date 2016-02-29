@@ -26,6 +26,7 @@ class Client:
         self.udp_port = random.randint(0, 65535)
         self.udp_socket.bind((util.show_ip(), self.udp_port))
 
+
     def ask_username(self):
         self.set_username(
             input("Enter your username " + Style.DIM + "(current = " + self.username + "): " + Style.RESET_ALL)
@@ -83,6 +84,32 @@ class Client:
             print(Fore.RED + self.server + ":" + str(self.server_port))
             print(Fore.RED + str(e))
 
+    def _handle(self):
+        commands = {
+            '/exit': self._exit,
+            '/quit': self._quit,
+            '/join': self._join,
+            '/send': self._send
+        }
+
+    def _exit(self):
+        self.running= False
+        self.udp_socket.close()
+
+
+
+    def _quit(self):
+        pass
+
+    def _join(self):
+        name = input('Which users would you connect?:')
+        users = name.split(' ')
+        try:
+            self.__address = (socket.gethostbyaddr(tokens[0])[0], int(tokens[1]))
+            print('Connecté à {}:{}'.format(*self.__address))
+        except OSError:
+            print("Erreur lors de l'envoi du message.")
+
     def request_userlist(self):
         try:
             self.server_socket = socket.socket()
@@ -110,6 +137,7 @@ class Client:
 
 
     def run(self):
+        self.__running = True
         r = ""
         while not r == "OK":
             response = self.send_available_to_server()
@@ -124,4 +152,12 @@ class Client:
             if r == "ERROR" and args[0] == "E02":
                 print(Fore.YELLOW + "This username \"%s\" is already taken, please choose another" % self.username)
                 self.ask_username()
+        while self.running:
+            try:
+                message, adress = self.udp_socket.recvfrom(1024)
+            except udp_socket.timeout:
+                pass
+            except OSError:
+                return
+
         print(self.request_userlist())
