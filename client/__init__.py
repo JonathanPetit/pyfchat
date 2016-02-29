@@ -1,8 +1,8 @@
 import socket
-import pickle
 import sys
 import random
 from colorama import Fore, Style
+import pickle
 
 import util
 
@@ -11,11 +11,20 @@ class Client:
     def __init__(self):
         self.username = "guest" + str(random.randint(100, 99999))
         self.adress = socket.gethostname()
-        self.socket = socket.socket()
 
         # By default the server points to localhost
         self.server = socket.gethostname()
         self.server_port = 6000
+        self.server_socket = socket.socket()
+        self.server_socket.settimeout(0.5)
+
+        # UDP connection
+        self.udp_socket = socket.socket(type=socket.SOCK_DGRAM)
+        self.udp_socket.settimeout(0.5)
+
+        # use random port
+        self.udp_port = random.randint(0, 65535)
+        self.udp_socket.bind((util.show_ip(), self.udp_port))
 
     def ask_username(self):
         self.set_username(
@@ -60,12 +69,13 @@ class Client:
     def send_available_to_server(self):
         try:
             print("Connecting to: " + self.server + ":%i" % self.server_port)
-            self.socket = socket.socket()
-            self.socket.connect((self.server, self.server_port))
-            self.socket.sendall(pickle.dumps("AVAILABLE {0}".format(self.username)))
-            self.socket.shutdown(1)
+            self.server_socket = socket.socket()
+            self.server_socket.connect((self.server, self.server_port))
+            self.server_socket.sendall(pickle.dumps("AVAILABLE {0} {1}".format(self.username, self.udp_port)))
+            self.server_socket.shutdown(1)
             response = self._recv()
-            self.socket.close()
+            self.server_socket.close()
+
             return response
 
         except OSError as e:
@@ -75,29 +85,29 @@ class Client:
 
     def request_userlist(self):
         try:
-            self.socket = socket.socket()
-            self.socket.connect((self.server, self.server_port))
-            self.socket.sendall(pickle.dumps("USERLIST"))
-            self.socket.shutdown(1)
+            self.server_socket = socket.socket()
+            self.server_socket.connect((self.server, self.server_port))
+            self.server_socket.sendall(pickle.dumps("USERLIST"))
+            self.server_socket.shutdown(1)
             response = self._recv()
-            self.socket.close()
-
-            return print("Userlist connect: " + response)
+            print(response)
+            self.server_socket.close()
+            return print(Fore.BLUE + "Userlist connect: " + response)
 
         except OSError as e:
             print(Fore.RED + "Impossible to connect: Server not found")
             print(Fore.RED + self.server + ":" + str(self.server_port))
             print(Fore.RED + str(e))
 
-
     def _recv(self):
         response = b""
-        r = self.socket.recv(1024)
+        r = self.server_socket.recv(1024)
         while r:
             response += r
-            r = self.socket.recv(1024)
+            r = self.server_socket.recv(1024)
 
         return pickle.loads(response)
+
 
     def run(self):
         r = ""
@@ -111,18 +121,7 @@ class Client:
                 print("Aborting...")
                 sys.exit(1)
 
-            if r == "ERROR" and args[0] == "E01":
-                print(Fore.YELLOW + "This username (%s) is already taken, please choose another")
+            if r == "ERROR" and args[0] == "E02":
+                print(Fore.YELLOW + "This username \"%s\" is already taken, please choose another" % self.username)
                 self.ask_username()
         print(self.request_userlist())
-
-
-
-
-
-# Travailler dans une branche a acomplir
-# git checkout -b <nom>
-# UDP
-# ask_user
-# fonction handle
-# socket UDP

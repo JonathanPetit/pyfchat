@@ -1,7 +1,6 @@
 import socket
 import sys
 import pickle
-
 from colorama import Fore
 
 import util
@@ -23,12 +22,11 @@ class Server:
         self.address = socket.gethostname()
         self.users = {}
 
-
     #
     #
     def run(self):
-        print("Listening on " + self._show_ip() + ":%i" % 6000)
-        print(self._show_ip())
+        print("Listening on " + util.show_ip() + ":%i" % 6000)
+        print(util.show_ip())
 
         self.socket.listen(0)
 
@@ -40,7 +38,6 @@ class Server:
                 client.close()
             except OSError:
                 print(Fore.RED + 'Erreur traitement requête client')
-
 
     #
     #
@@ -68,15 +65,16 @@ class Server:
     #
     #
     def _handle_command_available(self, client, ip, args):
-        if not len(args) == 1:
+        if not len(args) == 2:
             self._invalid_request(client)
             return
 
         username = args[0]
+        port = args[1]
 
         # If the username is in the list check if the ip adress is the same
         if username in self.users:
-            if not ip == self.users.get(username):
+            if not (ip, port) == self.users.get(username):
                 print(Fore.RED + "Username is already in use")
                 client.sendall(pickle.dumps("ERROR E02 'Username already in use'"))
             else:
@@ -84,9 +82,8 @@ class Server:
                 client.sendall(pickle.dumps("OK"))
 
         else:
-            self.users[username] = ip
-            print(Fore.GREEN + "User added:", username, ip, Fore.RESET)
-
+            self.users[username] = (ip, port)
+            print(Fore.GREEN + "User added:", username, ip, port, Fore.RESET)
             client.sendall(pickle.dumps("OK"))
 
     def _recv(self, client):
@@ -103,16 +100,6 @@ class Server:
     #
     def _command_unimplemented(self, client, ip, args):
         print(Fore.YELLOW + "Ow, It seems I am not implemented yet..")
-
-    # Needs an internet connecion to work...
-    def _show_ip(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            s.connect(('8.8.8.8', 0))  # connecting to a UDP address doesn't send packets
-        except:
-            print("Not connected to internet")
-            return socket.gethostbyname(socket.gethostname())
-        return s.getsockname()[0]
 
     def _userlist(self, client, ip, args):
         listusers =[]
