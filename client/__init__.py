@@ -68,6 +68,7 @@ class Client:
     def send_available_to_server(self):
         try:
             print("Connecting to: " + self.server + ":%i" % self.server_port)
+            self.server_socket = socket.socket()
             self.server_socket.connect((self.server, self.server_port))
             self.server_socket.sendall("AVAILABLE {0} {1}".format(self.username, self.udp_port).encode())
             self.server_socket.shutdown(1)
@@ -79,7 +80,7 @@ class Client:
         except OSError as e:
             print(Fore.RED + "Impossible to connect: Server not found")
             print(Fore.RED + self.server + ":" + str(self.server_port))
-            print(Fore.RED + e)
+            print(Fore.RED + str(e))
 
     def _recv(self):
         response = b""
@@ -102,6 +103,6 @@ class Client:
                 print("Aborting...")
                 sys.exit(1)
 
-            if r == "ERROR" and args[0] == "E01":
-                print(Fore.YELLOW + "This username (%s) is already taken, please choose another")
+            if r == "ERROR" and args[0] == "E02":
+                print(Fore.YELLOW + "This username \"%s\" is already taken, please choose another" % self.username)
                 self.ask_username()
