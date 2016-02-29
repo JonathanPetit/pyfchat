@@ -1,4 +1,5 @@
 import socket
+import pickle
 import sys
 import random
 from colorama import Fore, Style
@@ -59,8 +60,9 @@ class Client:
     def send_available_to_server(self):
         try:
             print("Connecting to: " + self.server + ":%i" % self.server_port)
+            self.socket = socket.socket()
             self.socket.connect((self.server, self.server_port))
-            self.socket.sendall("AVAILABLE {0}".format(self.username).encode())
+            self.socket.sendall(pickle.dumps("AVAILABLE {0}".format(self.username)))
             self.socket.shutdown(1)
             response = self._recv()
             self.socket.close()
@@ -70,7 +72,25 @@ class Client:
         except OSError as e:
             print(Fore.RED + "Impossible to connect: Server not found")
             print(Fore.RED + self.server + ":" + str(self.server_port))
-            print(Fore.RED + e)
+            print(Fore.RED + str(e))
+
+    def request_userlist(self):
+        try:
+            print("Connecting to: " + self.server + ":%i" % self.server_port)
+            self.socket = socket.socket()
+            self.socket.connect((self.server, self.server_port))
+            self.socket.sendall(pickle.dumps("USERLIST"))
+            self.socket.shutdown(1)
+            response = self._recv()
+            self.socket.close()
+
+            return response
+
+        except OSError as e:
+            print(Fore.RED + "Impossible to connect: Server not found")
+            print(Fore.RED + self.server + ":" + str(self.server_port))
+            print(Fore.RED + str(e))
+
 
     def _recv(self):
         response = b""
@@ -79,7 +99,7 @@ class Client:
             response += r
             r = self.socket.recv(1024)
 
-        return response.decode()
+        return pickle.loads(response)
 
     def run(self):
         r = ""
@@ -96,3 +116,4 @@ class Client:
             if r == "ERROR" and args[0] == "E01":
                 print(Fore.YELLOW + "This username (%s) is already taken, please choose another")
                 self.ask_username()
+        print(self.request_userlist())

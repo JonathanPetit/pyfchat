@@ -1,5 +1,6 @@
 import socket
 import sys
+import pickle
 
 from colorama import Fore
 
@@ -22,6 +23,7 @@ class Server:
         self.address = socket.gethostname()
         self.users = {}
 
+
     #
     #
     def run(self):
@@ -39,6 +41,7 @@ class Server:
             except OSError:
                 print(Fore.RED + 'Erreur traitement requête client')
 
+
     #
     #
     def _handle(self, client, ip):
@@ -48,6 +51,7 @@ class Server:
         commands = {
             "AVAILABLE": self._handle_command_available,
             "CONNECT": self._command_unimplemented,
+            "USERLIST": self._userlist
         }
 
         if command in commands:
@@ -59,7 +63,7 @@ class Server:
     #
     def _invalid_request(self, client):
         print(Fore.YELLOW + "Invalid request")
-        client.sendall("ERROR E01 'Invalid request'".encode())
+        client.sendall(pickle.dumps("ERROR E01 'Invalid request'"))
 
     #
     #
@@ -74,15 +78,15 @@ class Server:
         if username in self.users:
             if not ip == self.users.get(username):
                 print(Fore.RED + "Username is already in use")
-                client.sendall("ERROR E02 'Username already in use'".encode())
+                client.sendall(pickle.dumps("ERROR E02 'Username already in use'"))
             else:
                 print("User \"" + username + "\" pinged")
-                client.sendall("OK".encode())
+                client.sendall(pickle.dumps("OK"))
 
         else:
             self.users[username] = ip
             print(Fore.GREEN + "User added:", username, ip, Fore.RESET)
-            client.sendall("OK".encode())
+            client.sendall(pickle.dumps("OK"))
 
     def _recv(self, client):
         response = b""
@@ -91,7 +95,7 @@ class Server:
             response += r
             r = client.recv(1024)
 
-        return response.decode()
+        return pickle.loads(response)
 
     #
     # Helper function for commands that are not yet implemented
@@ -108,3 +112,8 @@ class Server:
             print("Not connected to internet")
             return socket.gethostbyname(socket.gethostname())
         return s.getsockname()[0]
+
+    def _userlist(self, client, ip, args):
+        users = [x for x in self.users]
+        client.sendall(pickle.dumps("OK"))
+        client.sendall(pickle.dumps(users))
