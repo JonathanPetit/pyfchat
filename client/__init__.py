@@ -85,30 +85,46 @@ class Client:
             print(Fore.RED + str(e))
 
     def _handle(self):
+        self.__running = True
         commands = {
             '/exit': self._exit,
             '/quit': self._quit,
             '/join': self._join,
-            '/send': self._send
         }
+        while self.running:
+            line = sys.stdin.readline().rstrip() + ' '
+            command = line[:line.index(' ')]
+            param = line[line.index(' ')+1:].rstrip()
+            if command in commands:
+                try:
+                    commands[command]() if param == '' else commands[command](param)
+                except:
+                    print("ERROR E01 'Invalid request")
+            else:
+                self._invalid_request()
+
+    def _invalid_request(self):
+        print(Fore.YELLOW + "Invalid request")
 
     def _exit(self):
-        self.running= False
+        self.running = False
+        self.address = None
+        print(Fore.GREEN + 'Thanks you for pyfchat utilisation!')
         self.udp_socket.close()
 
-
-
     def _quit(self):
-        pass
+        self.address = None
 
     def _join(self):
-        name = input('Which users would you connect?:')
-        users = name.split(' ')
-        try:
-            self.__address = (socket.gethostbyaddr(tokens[0])[0], int(tokens[1]))
-            print('Connecté à {}:{}'.format(*self.__address))
-        except OSError:
-            print("Erreur lors de l'envoi du message.")
+        tokens = param.split(' ')
+        if len(tokens) == 1:
+            try:
+                self.address = (int(tokens[1]))
+                print('Connect with {}'.format(*self.address))
+            except OSError:
+                print("Impossible to connect")
+        else:
+            print("Not correct execution of command")
 
     def request_userlist(self):
         try:
@@ -117,7 +133,6 @@ class Client:
             self.server_socket.sendall(pickle.dumps("USERLIST"))
             self.server_socket.shutdown(1)
             response = self._recv()
-            print(response)
             self.server_socket.close()
             return print(Fore.BLUE + "Userlist connect: " + response)
 
@@ -137,7 +152,8 @@ class Client:
 
 
     def run(self):
-        self.__running = True
+        self.running = True
+        self.address = None
         r = ""
         while not r == "OK":
             response = self.send_available_to_server()
@@ -152,12 +168,13 @@ class Client:
             if r == "ERROR" and args[0] == "E02":
                 print(Fore.YELLOW + "This username \"%s\" is already taken, please choose another" % self.username)
                 self.ask_username()
+        print(self.request_userlist())
         while self.running:
             try:
-                message, adress = self.udp_socket.recvfrom(1024)
-            except udp_socket.timeout:
+                self._handle()
+                message = self.udp_socket.recvfrom(1024)
+                print(pickle.dumps(message))
+            except socket.timeout:
                 pass
             except OSError:
                 return
-
-        print(self.request_userlist())
