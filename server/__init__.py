@@ -43,8 +43,8 @@ class Server:
 
         commands = {
             "AVAILABLE": self._handle_command_available,
-            "CONNECT": self._command_unimplemented,
-            "USERLIST": self._userlist
+            "CONNECT": self._handle_connect_request,
+            "USERLIST": self._handle_userlist_request,
         }
 
         if command in commands:
@@ -82,6 +82,31 @@ class Server:
             print(Fore.GREEN + "User added:", username, ip, port, Fore.RESET)
             client.sendall(pickle.dumps("OK"))
 
+    def _handle_connect_request(self, client, ip, args):
+        if not len(args) == 1:
+            self._invalid_request(client)
+            return
+
+        username = args[0]
+
+        user = self.users.get(username)
+
+        # If the username is in the list check if the ip adress is the same
+        if user is None:
+            print(Fore.RED + "User does not exist")
+            client.sendall(pickle.dumps("ERROR E03 'User does not exist'"))
+            return
+
+        print(ip + " wants to connect to \"" + username + "\"")
+        client.sendall(pickle.dumps(user))
+
+    def _handle_userlist_request(self, client, ip, args):
+        listusers = []
+        for users in self.users:
+            listusers.append(users)
+
+        client.sendall(pickle.dumps(listusers))
+
     def _recv(self, client):
         response = b""
         r = client.recv(1024)
@@ -96,10 +121,3 @@ class Server:
     #
     def _command_unimplemented(self, client, ip, args):
         print(Fore.YELLOW + "Ow, It seems I am not implemented yet..")
-
-    def _userlist(self, client, ip, args):
-        listusers = []
-        for users in self.users:
-            listusers.append(users)
-
-        client.sendall(pickle.dumps(listusers))

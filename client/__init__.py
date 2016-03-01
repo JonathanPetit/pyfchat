@@ -12,6 +12,8 @@ class Client:
         self.username = "guest" + str(random.randint(100, 99999))
         self.adress = socket.gethostname()
 
+        self._run = True
+
         # By default the server points to localhost
         self.server = socket.gethostname()
         self.server_port = 6000
@@ -70,6 +72,19 @@ class Client:
             print(Fore.RED + "Not a valid port number, 6000 will be used instead")
             self.server_port = 6000
 
+    def _handle_command(self, command, args):
+        commands = {
+            "quit": self._command_quit,
+            "userlist": self._command_userlist,
+            "connect": self._command_connect,
+            "help": self._command_help,
+        }
+
+        if command in commands:
+            commands[command](args)
+        else:
+            print(Fore.RED + "Invalid command, type ':help' for a list of available commands")
+
     #
     # Send "AVAILABLE username" to the server
     #
@@ -90,6 +105,14 @@ class Client:
             print(Fore.RED + self.server + ":" + str(self.server_port))
             print(Fore.RED + str(e))
 
+    def _command_userlist(self, args=None):
+        if not len(args) == 0:
+            print(Fore.YELLOW + "Invalid arguments")
+            self._command_help()
+            return
+
+        self.request_userlist()
+
     def request_userlist(self):
         try:
             self.server_socket = socket.socket()
@@ -106,12 +129,49 @@ class Client:
             for name in response:
                 print(" ", name)
 
+            print("")
+
             return response
 
         except OSError as e:
             print(Fore.RED + "\nImpossible to connect: Server not found")
             print(Fore.RED + self.server + ":" + str(self.server_port))
             print(Fore.RED + str(e))
+
+    def _command_connect(self, args):
+        if not len(args) == 1:
+            print(Fore.YELLOW + "Invalid arguments")
+            self._command_help()
+            return
+
+        self.connect_to_user(args[0])
+
+    def connect_to_user(self, username):
+        try:
+            self.server_socket = socket.socket()
+            self.server_socket.connect((self.server, self.server_port))
+            self.server_socket.sendall(pickle.dumps("CONNECT " + username))
+            self.server_socket.shutdown(1)
+            response = self._recv()
+            self.server_socket.close()
+
+            print(response)
+
+        except OSError as e:
+            print(Fore.RED + "\nImpossible to connect: Server not found")
+            print(Fore.RED + self.server + ":" + str(self.server_port))
+            print(Fore.RED + str(e))
+
+    def _command_quit(self, args=None):
+        if not len(args) == 0:
+            print(Fore.YELLOW + "Invalid arguments")
+            self._command_help()
+            return
+
+        self._run = False
+
+    def _command_help(self, args=None):
+        print("HELP :D")
 
     def _recv(self):
         response = b""
@@ -138,4 +198,9 @@ class Client:
                 print(Fore.YELLOW + "This username \"%s\" is already taken, please choose another" % self.username)
                 self.ask_username()
 
-        self.request_userlist()
+        while self._run:
+            line = sys.stdin.readline().rstrip()
+
+            if line[0] == ":" and len(line) > 2:
+                command, args = util.parse_command(line[1:])
+                self._handle_command(command, args)
