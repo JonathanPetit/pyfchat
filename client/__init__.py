@@ -10,7 +10,6 @@ import util
 class Client:
     def __init__(self):
         self.username = "guest" + str(random.randint(100, 99999))
-        self.adress = socket.gethostname()
 
         # By default the server points to localhost
         self.server = socket.gethostname()
@@ -25,6 +24,8 @@ class Client:
         # use random port
         self.udp_port = random.randint(0, 65535)
         self.udp_socket.bind((util.show_ip(), self.udp_port))
+
+        self.listusers=[]
 
 
     def ask_username(self):
@@ -85,11 +86,12 @@ class Client:
             print(Fore.RED + str(e))
 
     def _handle(self):
-        self.__running = True
+        self.running = True
+        self.address = None
         commands = {
             '/exit': self._exit,
             '/quit': self._quit,
-            '/join': self._join,
+            '/join': self._join
         }
         while self.running:
             line = sys.stdin.readline().rstrip() + ' '
@@ -99,7 +101,7 @@ class Client:
                 try:
                     commands[command]() if param == '' else commands[command](param)
                 except:
-                    print("ERROR E01 'Invalid request")
+                    print(Fore.RED + "ERROR E01 'Invalid request")
             else:
                 self._invalid_request()
 
@@ -113,18 +115,20 @@ class Client:
         self.udp_socket.close()
 
     def _quit(self):
+        print(Fore.GREEN + "Deconnect to {}:{}".format(*self.address))
         self.address = None
 
-    def _join(self):
-        tokens = param.split(' ')
-        if len(tokens) == 1:
+
+    def _join(self, args):
+        tokens = args.split(' ')
+        if len(tokens) == 2:
             try:
-                self.address = (int(tokens[1]))
-                print('Connect with {}'.format(*self.address))
+                self.address = (socket.gethostbyaddr(tokens[0])[0], int(tokens[1]))
+                print(Fore.GREEN + 'Connecté à {}:{}'.format(*self.address))
             except OSError:
-                print("Impossible to connect")
+                print(Fore.RED + "Join the client is not available")
         else:
-            print("Not correct execution of command")
+            print(Fore.RED + "Not correct execution of command")
 
     def request_userlist(self):
         try:
@@ -133,6 +137,8 @@ class Client:
             self.server_socket.sendall(pickle.dumps("USERLIST"))
             self.server_socket.shutdown(1)
             response = self._recv()
+            self.listusers.append(response)
+            print(self.listusers)
             self.server_socket.close()
             return print(Fore.BLUE + "Userlist connect: " + response)
 
@@ -172,7 +178,7 @@ class Client:
         while self.running:
             try:
                 self._handle()
-                message = self.udp_socket.recvfrom(1024)
+                message, address = self.udp_socket.recvfrom(1024)
                 print(pickle.dumps(message))
             except socket.timeout:
                 pass
