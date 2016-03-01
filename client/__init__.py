@@ -68,7 +68,7 @@ class Client:
     #
     def send_available_to_server(self):
         try:
-            print("Connecting to: " + self.server + ":%i" % self.server_port)
+            # print("Connecting to: " + self.server + ":%i" % self.server_port)
             self.server_socket = socket.socket()
             self.server_socket.connect((self.server, self.server_port))
             self.server_socket.sendall(pickle.dumps("AVAILABLE {0} {1}".format(self.username, self.udp_port)))
@@ -92,10 +92,17 @@ class Client:
             response = self._recv()
             self.server_socket.close()
 
-            return print("Userlist connect: " + response)
+            # Print the user list
+            print(Fore.BLUE + "\nUsers connected:")
+            print(Fore.BLUE + "----------------")
+
+            for name in response:
+                print(" ", name)
+
+            return response
 
         except OSError as e:
-            print(Fore.RED + "Impossible to connect: Server not found")
+            print(Fore.RED + "\nImpossible to connect: Server not found")
             print(Fore.RED + self.server + ":" + str(self.server_port))
             print(Fore.RED + str(e))
 
@@ -112,7 +119,7 @@ class Client:
         r = ""
         while not r == "OK":
             response = self.send_available_to_server()
-            print(response)
+            # print(response)
             try:
                 r, args = util.parse_command(response)
             except ValueError:
@@ -124,4 +131,4 @@ class Client:
                 print(Fore.YELLOW + "This username \"%s\" is already taken, please choose another" % self.username)
                 self.ask_username()
 
-        print(self.request_userlist())
+        self.request_userlist()

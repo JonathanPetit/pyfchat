@@ -24,8 +24,7 @@ class Server:
         self.users = {}
 
     def run(self):
-        print("Listening on " + util.show_ip() + ":%i" % 6000)
-        print(util.show_ip())
+        print(Fore.BLUE + "Listening on " + util.show_ip() + ":%i" % 6000)
 
         self.socket.listen(0)
 
@@ -102,6 +101,5 @@ class Server:
         listusers = []
         for users in self.users:
             listusers.append(users)
-        sendusers = ', '.join(listusers)
-        client.sendall(pickle.dumps(sendusers))
-        client.sendall(pickle.dumps("OK"))
+
+        client.sendall(pickle.dumps(listusers))
