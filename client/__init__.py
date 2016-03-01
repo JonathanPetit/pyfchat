@@ -24,7 +24,14 @@ class Client:
 
         # use random port
         self.udp_port = random.randint(0, 65535)
-        self.udp_socket.bind((util.show_ip(), self.udp_port))
+
+        # Try to bind to a specific port, handle if port is already in use
+        try:
+            self.udp_socket.bind((util.show_ip(), self.udp_port))
+        except socket.error as e:
+            if e.errno == 98:
+                print(Fore.YELLOW + "Port is already in use")
+                sys.exit(1)
 
     def ask_username(self):
         self.set_username(
