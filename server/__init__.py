@@ -1,5 +1,6 @@
 import socket
 import sys
+import pickle
 
 from colorama import Fore
 
@@ -22,8 +23,6 @@ class Server:
         self.address = socket.gethostname()
         self.users = {}
 
-    #
-    #
     def run(self):
         print("Listening on " + util.show_ip() + ":%i" % 6000)
         print(util.show_ip())
@@ -39,8 +38,6 @@ class Server:
             except OSError:
                 print(Fore.RED + 'Erreur traitement requête client')
 
-    #
-    #
     def _handle(self, client, ip):
         request = self._recv(client)
         command, args = util.parse_command(request)
@@ -48,6 +45,7 @@ class Server:
         commands = {
             "AVAILABLE": self._handle_command_available,
             "CONNECT": self._command_unimplemented,
+            "USERLIST": self._userlist
         }
 
         if command in commands:
@@ -59,7 +57,7 @@ class Server:
     #
     def _invalid_request(self, client):
         print(Fore.YELLOW + "Invalid request")
-        client.sendall("ERROR E01 'Invalid request'".encode())
+        client.sendall(pickle.dumps("ERROR E01 'Invalid request'"))
 
     #
     #
@@ -75,15 +73,15 @@ class Server:
         if username in self.users:
             if not (ip, port) == self.users.get(username):
                 print(Fore.RED + "Username is already in use")
-                client.sendall("ERROR E02 'Username already in use'".encode())
+                client.sendall(pickle.dumps("ERROR E02 'Username already in use'"))
             else:
                 print("User \"" + username + "\" pinged")
-                client.sendall("OK".encode())
+                client.sendall(pickle.dumps("OK"))
 
         else:
             self.users[username] = (ip, port)
             print(Fore.GREEN + "User added:", username, ip, port, Fore.RESET)
-            client.sendall("OK".encode())
+            client.sendall(pickle.dumps("OK"))
 
     def _recv(self, client):
         response = b""
@@ -92,10 +90,18 @@ class Server:
             response += r
             r = client.recv(1024)
 
-        return response.decode()
+        return pickle.loads(response)
 
     #
     # Helper function for commands that are not yet implemented
     #
     def _command_unimplemented(self, client, ip, args):
         print(Fore.YELLOW + "Ow, It seems I am not implemented yet..")
+
+    def _userlist(self, client, ip, args):
+        listusers = []
+        for users in self.users:
+            listusers.append(users)
+        sendusers = ', '.join(listusers)
+        client.sendall(pickle.dumps(sendusers))
+        client.sendall(pickle.dumps("OK"))

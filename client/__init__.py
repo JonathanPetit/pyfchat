@@ -1,4 +1,5 @@
 import socket
+import pickle
 import sys
 import random
 from colorama import Fore, Style
@@ -70,12 +71,28 @@ class Client:
             print("Connecting to: " + self.server + ":%i" % self.server_port)
             self.server_socket = socket.socket()
             self.server_socket.connect((self.server, self.server_port))
-            self.server_socket.sendall("AVAILABLE {0} {1}".format(self.username, self.udp_port).encode())
+            self.server_socket.sendall(pickle.dumps("AVAILABLE {0} {1}".format(self.username, self.udp_port)))
             self.server_socket.shutdown(1)
             response = self._recv()
             self.server_socket.close()
 
             return response
+
+        except OSError as e:
+            print(Fore.RED + "Impossible to connect: Server not found")
+            print(Fore.RED + self.server + ":" + str(self.server_port))
+            print(Fore.RED + str(e))
+
+    def request_userlist(self):
+        try:
+            self.server_socket = socket.socket()
+            self.server_socket.connect((self.server, self.server_port))
+            self.server_socket.sendall(pickle.dumps("USERLIST"))
+            self.server_socket.shutdown(1)
+            response = self._recv()
+            self.server_socket.close()
+
+            return print("Userlist connect: " + response)
 
         except OSError as e:
             print(Fore.RED + "Impossible to connect: Server not found")
@@ -89,7 +106,7 @@ class Client:
             response += r
             r = self.server_socket.recv(1024)
 
-        return response.decode()
+        return pickle.loads(response)
 
     def run(self):
         r = ""
@@ -106,3 +123,5 @@ class Client:
             if r == "ERROR" and args[0] == "E02":
                 print(Fore.YELLOW + "This username \"%s\" is already taken, please choose another" % self.username)
                 self.ask_username()
+
+        print(self.request_userlist())
