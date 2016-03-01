@@ -101,9 +101,8 @@ class Client:
             return response
 
         except OSError as e:
-            print(Fore.RED + "Impossible to connect: Server not found")
+            print(Fore.RED + "Impossible to connect: Server not found (" + str(e) + ")")
             print(Fore.RED + self.server + ":" + str(self.server_port))
-            print(Fore.RED + str(e))
 
     def _command_userlist(self, args=None):
         if not len(args) == 0:
@@ -171,7 +170,12 @@ class Client:
         self._run = False
 
     def _command_help(self, args=None):
-        print("HELP :D")
+        print("\nAvailable commands:\n")
+        print(":quit               | quits the program")
+        print(":userlist           | displays a list of available users")
+        print(":connect <username> | connects to user <username>")
+        print(":help               | displays this help message")
+        print("")
 
     def _recv(self):
         response = b""
@@ -186,12 +190,17 @@ class Client:
         r = ""
         while not r == "OK":
             response = self.send_available_to_server()
-            # print(response)
+
+            # If server is unavailable
+            if response is None:
+                print("Exiting...")
+                sys.exit(1)
+
             try:
                 r, args = util.parse_command(response)
             except ValueError:
                 print(Fore.RED + "Internal server error")
-                print("Aborting...")
+                print("Exiting...")
                 sys.exit(1)
 
             if r == "ERROR" and args[0] == "E02":
@@ -201,6 +210,11 @@ class Client:
         while self._run:
             line = sys.stdin.readline().rstrip()
 
+            # Skip if empty line
+            if len(line) == 0:
+                continue
+
+            # If line begins with a colon it's considered a command
             if line[0] == ":" and len(line) > 2:
                 command, args = util.parse_command(line[1:])
                 self._handle_command(command, args)
