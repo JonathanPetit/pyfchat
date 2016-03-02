@@ -163,21 +163,12 @@ class Client:
 
     def remove_user(self):
         try:
-            listusers = []
-            self.server_socket = socket.socket()
-            self.server_socket.connect((self.server, self.server_port))
-            self.server_socket.sendall(pickle.dumps("USERLIST"))
-            self.server_socket.shutdown(1)
-            response = self._recv()
-            self.server_socket.close()
-            
-            response.remove(self.username)
-
             self.server_socket = socket.socket()
             self.server_socket.connect((self.server, self.server_port))
             self.server_socket.sendall(pickle.dumps("REMOVE"))
             self.server_socket.shutdown(1)
             self.server_socket.close()
+
         except OSError as e:
             print(Fore.RED + "\nImpossible to connect: Server not found")
             print(Fore.RED + self.server + ":" + str(self.server_port))

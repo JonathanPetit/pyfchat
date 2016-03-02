@@ -23,8 +23,7 @@ class Server:
         self.users = {}
 
     def run(self):
-        print("Listening on " + util.show_ip() + ":%i" % 6000)
-        print(util.show_ip())
+        print(Fore.BLUE + "Listening on " + util.show_ip() + ":%i" % 6000)
 
         self.socket.listen(0)
 
@@ -43,8 +42,8 @@ class Server:
 
         commands = {
             "AVAILABLE": self._handle_command_available,
-            "CONNECT": self._command_unimplemented,
-            "USERLIST": self._userlist,
+            "CONNECT": self._handle_connect_request,
+            "USERLIST": self._handle_userlist_request,
             "REMOVE": self._remove
         }
 
@@ -53,25 +52,17 @@ class Server:
         else:
             self._invalid_request(client)
 
-    #
-    #
     def _invalid_request(self, client):
         print(Fore.YELLOW + "Invalid request")
         client.sendall(pickle.dumps("ERROR E01 'Invalid request'"))
 
     def _remove(self, client, ip, args):
-        pos = 0
-        users = list(self.users.keys())
-        for user in self.users.values():
-            if ip == user[0]: # Comparer les adresse ip
-                name = users[pos]
-                del self.users[name]
-                print(Fore.BLUE + "User quit: " + name)
+        for username in self.users:
+            if ip == self.users[username][0]:
+                del self.users[username]
+                print(Fore.YELLOW + "User removed: " + Fore.RESET + username)
                 break
-            pos +=1
 
-    #
-    #
     def _handle_command_available(self, client, ip, args):
         if not len(args) == 2:
             self._invalid_request(client)
@@ -82,7 +73,7 @@ class Server:
 
         # If the username is in the list check if the ip adress is the same
         if username in self.users:
-            if not (ip, port) == self.users.get(username):
+            if not (ip, port) == self.users[username]:
                 print(Fore.RED + "Username is already in use")
                 client.sendall(pickle.dumps("ERROR E02 'Username already in use'"))
             else:
@@ -94,6 +85,31 @@ class Server:
             print(Fore.GREEN + "User added:", username, ip, port, Fore.RESET)
             client.sendall(pickle.dumps("OK"))
 
+    def _handle_connect_request(self, client, ip, args):
+        if not len(args) == 1:
+            self._invalid_request(client)
+            return
+
+        username = args[0]
+
+        user = self.users.get(username)
+
+        # If the username is in the list check if the ip adress is the same
+        if user is None:
+            print(Fore.RED + "User does not exist")
+            client.sendall(pickle.dumps("ERROR E03 'User does not exist'"))
+            return
+
+        print(ip + " wants to connect to \"" + username + "\"")
+        client.sendall(pickle.dumps(user))
+
+    def _handle_userlist_request(self, client, ip, args):
+        listusers = []
+        for users in self.users:
+            listusers.append(users)
+
+        client.sendall(pickle.dumps(listusers))
+
     def _recv(self, client):
         response = b""
         r = client.recv(1024)
@@ -102,16 +118,3 @@ class Server:
             r = client.recv(1024)
 
         return pickle.loads(response)
-
-    #
-    # Helper function for commands that are not yet implemented
-    #
-    def _command_unimplemented(self, client, ip, args):
-        print(Fore.YELLOW + "Ow, It seems I am not implemented yet..")
-
-    def _userlist(self, client, ip, args):
-        listusers = []
-        for users in self.users:
-            listusers.append(users)
-        client.sendall(pickle.dumps(listusers))
-        client.sendall(pickle.dumps("OK"))
