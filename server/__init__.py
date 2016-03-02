@@ -60,6 +60,7 @@ class Server:
         client.sendall(pickle.dumps("ERROR E01 'Invalid request'"))
 
     def _remove(self, client, ip, args):
+        pass
         #username = args[0]
         #print(self.address)
         #print(self.users)
