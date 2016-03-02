@@ -124,17 +124,3 @@ class Server:
             r = client.recv(1024)
 
         return pickle.loads(response)
-
-    #
-    # Helper function for commands that are not yet implemented
-    #
-    def _command_unimplemented(self, client, ip, args):
-        print(Fore.YELLOW + "Ow, It seems I am not implemented yet..")
-
-    def _userlist(self, client, ip, args):
-        listusers =[]
-        for users in self.users:
-            listusers.append(users)
-        sendusers = ', '.join(listusers)
-        client.sendall(pickle.dumps(sendusers))
-        client.sendall(pickle.dumps("OK"))

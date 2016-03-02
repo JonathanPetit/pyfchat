@@ -1,9 +1,9 @@
 import socket
+import pickle
 import sys
 import random
 import threading
 from colorama import Fore, Style
-import pickle
 
 import util
 
@@ -11,11 +11,9 @@ import util
 class Client:
     def __init__(self):
         self.username = "guest" + str(random.randint(100, 99999))
-
         self.adress = util.show_ip()
 
         self._run = True
-
 
         # By default the server points to localhost
         self.server = socket.gethostname()
@@ -26,6 +24,7 @@ class Client:
         # UDP connection
         self.udp_socket = socket.socket(type=socket.SOCK_DGRAM)
         self.udp_socket.settimeout(0.5)
+
         self.udp_remote = None
 
         # use random port
@@ -94,11 +93,10 @@ class Client:
     #
     def send_available_to_server(self):
         try:
-            print("Connecting to: " + self.server + ":%i" % self.server_port)
+            # print("Connecting to: " + self.server + ":%i" % self.server_port)
             self.server_socket = socket.socket()
             self.server_socket.connect((self.server, self.server_port))
-            self.server_socket.sendall(pickle.dumps("AVAILABLE {0} {1}".format(self.username, self.udp_port)))
-
+            self.server_socket.sendall(pickle.dumps("AVAILABLE {} {} {}".format(self.adress, self.username, self.udp_port)))
             self.server_socket.shutdown(1)
             response = self._recv()
             self.server_socket.close()
@@ -117,58 +115,12 @@ class Client:
 
         self.request_userlist()
 
-    def _handle(self):
-        self.running = True
-        self.address = None
-        commands = {
-            '/exit': self._exit,
-            '/quit': self._quit,
-            '/join': self._join
-        }
-        while self.running:
-            line = sys.stdin.readline().rstrip() + ' '
-            command = line[:line.index(' ')]
-            param = line[line.index(' ')+1:].rstrip()
-            if command in commands:
-                try:
-                    commands[command]() if param == '' else commands[command](param)
-                except:
-                    print(Fore.RED + "ERROR E01 'Invalid request")
-            else:
-                self._invalid_request()
-
-    def _invalid_request(self):
-        print(Fore.YELLOW + "Invalid request")
-
-    def _exit(self):
-        self.running = False
-        self.address = None
-        print(Fore.GREEN + 'Thanks you for pyfchat utilisation!')
-        self.udp_socket.close()
-
-    def _quit(self):
-        print(Fore.GREEN + "Deconnect to {}:{}".format(*self.address))
-        self.address = None
-
-
-    def _join(self, args):
-        tokens = args.split(' ')
-        if len(tokens) == 2:
-            try:
-                self.address = (socket.gethostbyaddr(tokens[0])[0], int(tokens[1]))
-                print(Fore.GREEN + 'Connecté à {}:{}'.format(*self.address))
-            except OSError:
-                print(Fore.RED + "Join the client is not available")
-        else:
-            print(Fore.RED + "Not correct execution of command")
-
     def request_userlist(self):
         try:
             self.server_socket = socket.socket()
             self.server_socket.connect((self.server, self.server_port))
             self.server_socket.sendall(pickle.dumps("USERLIST"))
             self.server_socket.shutdown(1)
-
             response = self._recv()
             self.server_socket.close()
 
@@ -230,12 +182,6 @@ class Client:
             self.server_socket.shutdown(1)
             self.server_socket.close()
 
-            response = self._recv()
-            self.listusers.append(response)
-            print(self.listusers)
-            self.server_socket.close()
-            return print(Fore.BLUE + "Userlist connect: " + response)
-
         except OSError as e:
             print(Fore.RED + "\nImpossible to connect: Server not found")
             print(Fore.RED + self.server + ":" + str(self.server_port))
@@ -256,7 +202,6 @@ class Client:
         print(":connect <username> | connects to user <username>")
         print(":help               | displays this help message")
         print("")
-
 
     def _recv(self):
         response = b""
@@ -295,8 +240,6 @@ class Client:
                 print(Fore.YELLOW + "Unable to send")
 
     def run(self):
-        self.running = True
-        self.address = None
         r = ""
         while not r == "OK":
             response = self.send_available_to_server()
