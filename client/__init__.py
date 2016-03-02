@@ -161,12 +161,36 @@ class Client:
             print(Fore.RED + self.server + ":" + str(self.server_port))
             print(Fore.RED + str(e))
 
+    def remove_user(self):
+        try:
+            listusers = []
+            self.server_socket = socket.socket()
+            self.server_socket.connect((self.server, self.server_port))
+            self.server_socket.sendall(pickle.dumps("USERLIST"))
+            self.server_socket.shutdown(1)
+            response = self._recv()
+            self.server_socket.close()
+
+            print(self.username)
+            response.remove(self.username)
+            print(response)
+
+            self.server_socket = socket.socket()
+            self.server_socket.connect((self.server, self.server_port))
+            self.server_socket.sendall(pickle.dumps("REMOVE"))
+            self.server_socket.shutdown(1)
+            self.server_socket.close()
+        except OSError as e:
+            print(Fore.RED + "\nImpossible to connect: Server not found")
+            print(Fore.RED + self.server + ":" + str(self.server_port))
+            print(Fore.RED + str(e))
+
     def _command_quit(self, args=None):
         if not len(args) == 0:
             print(Fore.YELLOW + "Invalid arguments")
             self._command_help()
             return
-
+        self.remove_user()
         self._run = False
 
     def _command_help(self, args=None):
