@@ -60,16 +60,15 @@ class Server:
         client.sendall(pickle.dumps("ERROR E01 'Invalid request'"))
 
     def _remove(self, client, ip, args):
-        pass
-        #username = args[0]
-        #print(self.address)
-        #print(self.users)
-
-        #print(username)
-
-        #del(self.users[username])
-        #print("User quit:" + username)
-
+        pos = 0
+        users = list(self.users.keys())
+        for user in self.users.values():
+            if ip == user[0]: # Comparer les adresse ip
+                name = users[pos]
+                del self.users[name]
+                print(Fore.BLUE + "User quit: " + name)
+                break
+            pos +=1
 
     #
     #

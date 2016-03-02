@@ -170,10 +170,8 @@ class Client:
             self.server_socket.shutdown(1)
             response = self._recv()
             self.server_socket.close()
-
-            print(self.username)
+            
             response.remove(self.username)
-            print(response)
 
             self.server_socket = socket.socket()
             self.server_socket.connect((self.server, self.server_port))
