@@ -22,4 +22,3 @@ To run the client: `python pyfchat.py`
 A couple of commands are available in client mode, they have to be prefixed with a `:` (e.g. type `:help` for help)
 
 Multiple users can connect to you and send you messages, but you can only send to one user at a time. To connect to a user type `:connect <username>` all the following lines you type, that are not commands, will be send to that user.
-
