@@ -48,7 +48,7 @@ class Server:
         }
 
         if command in commands:
-            commands[command](client, ip, args)
+            commands[command](client, args)
         else:
             self._invalid_request(client)
 
@@ -56,20 +56,27 @@ class Server:
         print(Fore.YELLOW + "Invalid request")
         client.sendall(pickle.dumps("ERROR E01 'Invalid request'"))
 
-    def _remove(self, client, ip, args):
+    def _remove(self, client, args):
+        if not len(args) == 1:
+            self._invalid_request(client)
+            return
+
+        ip = args[0]
+
         for username in self.users:
             if ip == self.users[username][0]:
                 del self.users[username]
                 print(Fore.YELLOW + "User removed: " + Fore.RESET + username)
                 break
 
-    def _handle_command_available(self, client, ip, args):
-        if not len(args) == 2:
+    def _handle_command_available(self, client, args):
+        if not len(args) == 3:
             self._invalid_request(client)
             return
 
-        username = args[0]
-        port = args[1]
+        ip = args[0]
+        username = args[1]
+        port = args[2]
 
         # If the username is in the list check if the ip adress is the same
         if username in self.users:
@@ -85,7 +92,7 @@ class Server:
             print(Fore.GREEN + "User added:", username, ip, port, Fore.RESET)
             client.sendall(pickle.dumps("OK"))
 
-    def _handle_connect_request(self, client, ip, args):
+    def _handle_connect_request(self, client, args):
         if not len(args) == 1:
             self._invalid_request(client)
             return
@@ -100,10 +107,9 @@ class Server:
             client.sendall(pickle.dumps("ERROR E03 'User does not exist'"))
             return
 
-        print(ip + " wants to connect to \"" + username + "\"")
         client.sendall(pickle.dumps(user))
 
-    def _handle_userlist_request(self, client, ip, args):
+    def _handle_userlist_request(self, client, args):
         listusers = []
         for users in self.users:
             listusers.append(users)
